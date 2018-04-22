@@ -19,21 +19,71 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Dfe-eI-etN" customClass="RoundedShadowView" customModule="HappyMem" customModuleProvider="target">
-                                <rect key="frame" x="40" y="104" width="295" height="523"/>
+                                <rect key="frame" x="37.5" y="183.5" width="300" height="300"/>
+                                <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="WgR-X5-47P">
+                                        <rect key="frame" x="5" y="35" width="290" height="120"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="120" id="t0x-bu-By4"/>
+                                        </constraints>
+                                        <string key="text">In Order to work fully, HappyMem needs to read your photo library and also be able to listen your voice. Please clik tap the 👍 below to allow the App to be fully functional!</string>
+                                        <fontDescription key="fontDescription" name="TrebuchetMS" family="Trebuchet MS" pointSize="17"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="eJ5-DV-9Fk">
+                                        <rect key="frame" x="10" y="165" width="280" height="125"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="90"/>
+                                        <state key="normal" title="👍"/>
+                                    </button>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="We Need Your Permission!" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="1B3-Rz-z9x">
+                                        <rect key="frame" x="2" y="10" width="296" height="20"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="20" id="AZj-S6-Jwc"/>
+                                        </constraints>
+                                        <fontDescription key="fontDescription" type="boldSystem" pointSize="17"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                </subviews>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstAttribute="trailing" secondItem="WgR-X5-47P" secondAttribute="trailing" constant="5" id="BWG-S4-nLj"/>
+                                    <constraint firstItem="1B3-Rz-z9x" firstAttribute="leading" secondItem="Dfe-eI-etN" secondAttribute="leading" constant="2" id="F7h-Fj-xOS"/>
+                                    <constraint firstItem="1B3-Rz-z9x" firstAttribute="top" secondItem="Dfe-eI-etN" secondAttribute="top" constant="10" id="G4p-NC-zUX"/>
+                                    <constraint firstItem="eJ5-DV-9Fk" firstAttribute="leading" secondItem="Dfe-eI-etN" secondAttribute="leading" constant="10" id="HjB-Hz-QSw"/>
+                                    <constraint firstAttribute="bottom" secondItem="eJ5-DV-9Fk" secondAttribute="bottom" constant="10" id="K3I-oX-tHv"/>
+                                    <constraint firstItem="WgR-X5-47P" firstAttribute="leading" secondItem="Dfe-eI-etN" secondAttribute="leading" constant="5" id="PN4-7i-e2b"/>
+                                    <constraint firstItem="eJ5-DV-9Fk" firstAttribute="top" secondItem="WgR-X5-47P" secondAttribute="bottom" constant="10" id="QOq-3B-SRl"/>
+                                    <constraint firstAttribute="trailing" secondItem="eJ5-DV-9Fk" secondAttribute="trailing" constant="10" id="Xlo-4i-wAl"/>
+                                    <constraint firstItem="WgR-X5-47P" firstAttribute="top" secondItem="1B3-Rz-z9x" secondAttribute="bottom" constant="5" id="ilj-DM-fee"/>
+                                    <constraint firstAttribute="trailing" secondItem="1B3-Rz-z9x" secondAttribute="trailing" constant="2" id="lXb-Wd-uQN"/>
+                                    <constraint firstAttribute="width" constant="300" id="oVk-OO-ZeJ"/>
+                                    <constraint firstAttribute="height" constant="300" id="wWM-fo-hdV"/>
+                                </constraints>
                                 <userDefinedRuntimeAttributes>
                                     <userDefinedRuntimeAttribute type="number" keyPath="cornerRadius">
-                                        <real key="value" value="10"/>
+                                        <real key="value" value="20"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="shadowRadius">
+                                        <real key="value" value="15"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="size" keyPath="shadowOffset">
+                                        <size key="value" width="0.0" height="5"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="shadowOpacity">
+                                        <real key="value" value="0.5"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="shadowColor">
+                                        <color key="value" name="scrollBarColor" catalog="System" colorSpace="catalog"/>
                                     </userDefinedRuntimeAttribute>
                                 </userDefinedRuntimeAttributes>
                             </view>
                         </subviews>
-                        <color key="backgroundColor" red="0.6586906897" green="0.90668623100000001" blue="0.82018982529999995" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="backgroundColor" red="0.43529411759999997" green="0.80000000000000004" blue="0.83137254900000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="Dfe-eI-etN" secondAttribute="trailing" constant="40" id="6Ec-1R-7ux"/>
-                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="Dfe-eI-etN" secondAttribute="bottom" constant="40" id="8kr-mg-rNr"/>
-                            <constraint firstItem="Dfe-eI-etN" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="40" id="D65-JS-lZp"/>
-                            <constraint firstItem="Dfe-eI-etN" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="40" id="rup-tG-bMR"/>
+                            <constraint firstItem="Dfe-eI-etN" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="GRe-HM-LQ5"/>
+                            <constraint firstItem="Dfe-eI-etN" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="Uz0-PJ-HYI"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
