@@ -18,5 +18,4 @@ class PhotoCell: UICollectionViewCell {
         super.awakeFromNib()
         
     }
-    
 }

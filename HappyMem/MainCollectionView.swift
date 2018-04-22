@@ -15,14 +15,20 @@ import Speech
 private let reuseIdentifier = "cell"
 private let reuseIdentifierHeader = "header"
 
-class MainCollectionView: UICollectionViewController {
+class MainCollectionView: UICollectionViewController, UICollectionViewDelegateFlowLayout, AVAudioRecorderDelegate {
     
     var memories = [URL]()
+    var activeMemory: URL!
+    // For Aduio
+    var audioRecorder: AVAudioRecorder?
+    var recordingURL: URL!
 
     override func viewDidLoad() {
         super.viewDidLoad()
         checkPermission()
         loadMemories()
+        
+        recordingURL = getDocumentsDirectory().appendingPathComponent("recording.m4a")
         
         // adding navigation button
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addTapped))
@@ -47,12 +53,31 @@ class MainCollectionView: UICollectionViewController {
         }
     }
 
+    // MARK: Cell For Item At
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath)
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as? PhotoCell else { return UICollectionViewCell() }
     
         // Configure the cell
-    
+        let photoMem = memories[indexPath.row]
+        let imageName = thumbnailURL(for: photoMem).path
+        let image = UIImage(contentsOfFile: imageName)
+        cell.imageView.image = image
+        
+        if cell.gestureRecognizers == nil {
+            let recognizer = UILongPressGestureRecognizer(target: self, action: #selector(memoryLongPress))
+            recognizer.minimumPressDuration = 0.25
+            cell.addGestureRecognizer(recognizer)
+            
+            cell.layer.borderColor = UIColor.white.cgColor
+            cell.layer.cornerRadius = 5.0
+            cell.layer.borderWidth = 2.0
+        }
+        
         return cell
+    }
+    
+    override func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+        return collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: reuseIdentifierHeader, for: indexPath)
     }
     
     // we will use the dedicated method loadMemomories()
@@ -64,6 +89,14 @@ class MainCollectionView: UICollectionViewController {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         let documentsDirectory = paths[0]
         return documentsDirectory
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
+        if section == 1 {
+            return CGSize.zero
+        } else {
+            return CGSize(width: 0, height: 50)
+        }
     }
     
     func loadMemories() {
@@ -127,6 +160,66 @@ class MainCollectionView: UICollectionViewController {
     
     func transcriptionURL(for memory: URL) -> URL {
         return memory.appendingPathExtension("txt")
+    }
+    
+    // MARK: Long press, figure out which cell is being pressed
+    @objc func memoryLongPress(sender: UILongPressGestureRecognizer) {
+        if sender.state == .began {
+            let cell = sender.view as! PhotoCell
+            
+            if let index = collectionView?.indexPath(for: cell) {
+                activeMemory = memories[index.row]
+                recordMemomory()
+            }
+        } else if sender.state == .ended {
+            finishRecording(success: true)
+        }
+    }
+    
+     // MARK: Recording Method
+    func recordMemomory() {
+        // Recording in iOS ViewController needs to confrom to AVAudioRecordDelegate
+        // Step 1 set the backgroung to red to let the user know that audio is being recorded
+        collectionView?.backgroundColor = UIColor(red: 0.5, green: 0, blue: 0, alpha: 1)
+        
+        let recordingSession = AVAudioSession.sharedInstance()
+        
+        do {
+            // step 2 configure the session for recording and playback
+            try recordingSession.setCategory(AVAudioSessionCategoryPlayAndRecord, with: .defaultToSpeaker)
+            try recordingSession.setActive(true)
+            
+            // step 3 set up a high quaility recording session
+            let settings = [
+                AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+                AVSampleRateKey: 44100,
+                AVNumberOfChannelsKey: 2,
+                AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+            ]
+            
+            // step 4 create the audio recording and assign ourselces as the delegate
+            audioRecorder = try AVAudioRecorder(url: recordingURL, settings: settings)
+            audioRecorder?.delegate = self
+            audioRecorder?.record()
+        } catch let error {
+            // failed to record
+            print("Failed to record error: \(error)")
+            finishRecording(success: false)
+        }
+    }
+    
+    func finishRecording(success: Bool) {
+        
+    }
+    
+    func transcribeAudio() {
+        
+    }
+    
+    func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
+        if !flag {
+            finishRecording(success: false)
+        }
     }
 }
 
