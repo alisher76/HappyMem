@@ -183,16 +183,18 @@
                             <rect key="frame" x="0.0" y="0.0" width="375" height="50"/>
                             <autoresizingMask key="autoresizingMask"/>
                             <subviews>
-                                <searchBar contentMode="redraw" translatesAutoresizingMaskIntoConstraints="NO" id="o4a-ZL-Qag">
+                                <searchBar contentMode="redraw" text="" translatesAutoresizingMaskIntoConstraints="NO" id="o4a-ZL-Qag">
                                     <rect key="frame" x="0.0" y="0.0" width="375" height="50"/>
+                                    <color key="backgroundColor" red="0.43529411759999997" green="0.80000000000000004" blue="0.83137254900000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                    <color key="barTintColor" red="0.43529411759999997" green="0.80000000000000004" blue="0.83137254900000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                     <textInputTraits key="textInputTraits"/>
                                     <userDefinedRuntimeAttributes>
                                         <userDefinedRuntimeAttribute type="color" keyPath="searchField.textColor">
-                                            <color key="value" red="0.99963909390000005" green="1" blue="0.99975615740000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                            <color key="value" name="controlDarkShadowColor" catalog="System" colorSpace="catalog"/>
                                         </userDefinedRuntimeAttribute>
                                     </userDefinedRuntimeAttributes>
                                     <connections>
-                                        <outlet property="delegate" destination="hKe-Fm-kMY" id="voK-cc-KXZ"/>
+                                        <outlet property="delegate" destination="hKe-Fm-kMY" id="F6Q-EZ-dF6"/>
                                     </connections>
                                 </searchBar>
                             </subviews>

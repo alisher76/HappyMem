@@ -16,15 +16,17 @@ import MobileCoreServices
 private let reuseIdentifier = "cell"
 private let reuseIdentifierHeader = "header"
 
-class MainCollectionView: UICollectionViewController, UICollectionViewDelegateFlowLayout, AVAudioRecorderDelegate {
+class MainCollectionView: UICollectionViewController, UICollectionViewDelegateFlowLayout, AVAudioRecorderDelegate, UISearchBarDelegate {
     
     var memories = [URL]()
+    var filteredMemories = [URL]()
     var activeMemory: URL!
     // For Aduio
     var audioRecorder: AVAudioRecorder?
     var recordingURL: URL!
     var audioPlayer: AVAudioPlayer?
-
+    var searchQueary: CSSearchQuery?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         checkPermission()
@@ -51,7 +53,7 @@ class MainCollectionView: UICollectionViewController, UICollectionViewDelegateFl
         if section == 0 {
             return 0
         } else {
-            return memories.count
+            return filteredMemories.count
         }
     }
 
@@ -60,7 +62,7 @@ class MainCollectionView: UICollectionViewController, UICollectionViewDelegateFl
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as? PhotoCell else { return UICollectionViewCell() }
     
         // Configure the cell
-        let photoMem = memories[indexPath.row]
+        let photoMem = filteredMemories[indexPath.row]
         let imageName = thumbnailURL(for: photoMem).path
         let image = UIImage(contentsOfFile: imageName)
         cell.imageView.image = image
@@ -84,7 +86,7 @@ class MainCollectionView: UICollectionViewController, UICollectionViewDelegateFl
     
     
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let memory = memories[indexPath.row]
+        let memory = filteredMemories[indexPath.row]
         let fm = FileManager.default
         
         do {
@@ -125,7 +127,7 @@ class MainCollectionView: UICollectionViewController, UICollectionViewDelegateFl
     }
     
     func loadMemories() {
-        memories.removeAll()
+        filteredMemories.removeAll()
         
         // attempt to load all the mems in direc
         guard let files = try? FileManager.default.contentsOfDirectory(at: getDocumentsDirectory(), includingPropertiesForKeys: nil, options: []) else { return }
@@ -143,12 +145,13 @@ class MainCollectionView: UICollectionViewController, UICollectionViewDelegateFl
                 let memoryPath = getDocumentsDirectory().appendingPathComponent(noExtension)
                 
                 // add it to our array
-                memories.append(memoryPath)
+                filteredMemories.append(memoryPath)
             }
         }
         
         // reload our list of memories
         // the reason to use section reload on collection view to avoid reloading the search box
+        filteredMemories = memories
         collectionView?.reloadSections(IndexSet(integer: 1))
     }
     
@@ -193,7 +196,7 @@ class MainCollectionView: UICollectionViewController, UICollectionViewDelegateFl
             let cell = sender.view as! PhotoCell
             
             if let index = collectionView?.indexPath(for: cell) {
-                activeMemory = memories[index.row]
+                activeMemory = filteredMemories[index.row]
                 recordMemomory()
             }
         } else if sender.state == .ended {
@@ -405,5 +408,63 @@ extension MainCollectionView: UIImagePickerControllerDelegate, UINavigationContr
         
         // send it back
         return newImage
+    }
+    
+    
+    // MARK: Search bar
+    
+    // 1. Running a CSSearchQuery returns CSSearchableItem items, so we need to an array to store that data type.
+    // 2. We’ll be taking advantage of closure capturing to share that array between the “found items” closure and the “search is finished” handler.
+    // 3. Your closures can be called on any thread, so as we’re manipulating the UI when the search finishes I’ll be pushing that work to the main thread.
+    // 4. You need to explicitly call start() on the search to make it begin.
+    // 5. In case a user types really fast, we want to a way to cancel the existing search before starting a new one. To make that happen, we’ll be storing the CSSearchQuery object as a property in the class, then calling cancel() on it before searching.
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        filteredMemories(text: searchText)
+    }
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.resignFirstResponder()
+    }
+    
+    
+    
+    func filteredMemories(text: String) {
+        
+        guard text.count > 0 else {
+            filteredMemories = memories
+            
+            UIView.performWithoutAnimation {
+                collectionView?.reloadSections(IndexSet(integer: 1))
+            }
+            return
+        }
+         var allItems = [CSSearchableItem]()
+         searchQueary?.cancel()
+        
+         let queryString = "contentDescription == \"*\(text)*\"c"
+         searchQueary = CSSearchQuery(queryString: queryString, attributes: nil)
+        
+        searchQueary?.foundItemsHandler = { items in
+            allItems.append(contentsOf: items)
+        }
+        
+        searchQueary?.completionHandler = { error in
+            DispatchQueue.main.async { [unowned self] in
+                self.activeFilter(matches: allItems)
+            }
+        }
+        searchQueary?.start()
+    }
+    
+    func activeFilter(matches: [CSSearchableItem]) {
+        filteredMemories = matches.map({ (item) in
+            print(item.uniqueIdentifier)
+            return URL(fileURLWithPath: item.uniqueIdentifier)
+        })
+        
+        UIView.performWithoutAnimation {
+            collectionView?.reloadSections(IndexSet(integer: 1))
+        }
     }
 }
