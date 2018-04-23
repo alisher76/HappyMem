@@ -10,7 +10,8 @@ import UIKit
 import AVFoundation
 import Photos
 import Speech
-
+import CoreSpotlight
+import MobileCoreServices
 
 private let reuseIdentifier = "cell"
 private let reuseIdentifierHeader = "header"
@@ -22,6 +23,7 @@ class MainCollectionView: UICollectionViewController, UICollectionViewDelegateFl
     // For Aduio
     var audioRecorder: AVAudioRecorder?
     var recordingURL: URL!
+    var audioPlayer: AVAudioPlayer?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -80,12 +82,35 @@ class MainCollectionView: UICollectionViewController, UICollectionViewDelegateFl
         return collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: reuseIdentifierHeader, for: indexPath)
     }
     
-    // we will use the dedicated method loadMemomories()
-    // this method needs several steps
-    // 1 Remove existing memories not to have duplicates
-    // 2 Pull out a list of all the files that are stored in our apps directory folder
-    // 3 Loop over ecery file that was found and if it was a thumbnail add it to our memories array
+    
+    override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let memory = memories[indexPath.row]
+        let fm = FileManager.default
+        
+        do {
+            let audioName = audioURL(for: memory)
+            let transcriptionName = transcriptionURL(for: memory)
+            
+            if fm.fileExists(atPath: audioName.path) {
+                audioPlayer = try AVAudioPlayer(contentsOf: audioName)
+                audioPlayer?.play()
+            }
+            
+            if fm.fileExists(atPath: transcriptionName.path) {
+                let contents = try String(contentsOf: transcriptionName)
+                print(contents)
+            }
+        } catch {
+            print("Error occured while playing")
+        }
+    }
+    
     func getDocumentsDirectory() -> URL {
+        // we will use the dedicated method loadMemomories()
+        // this method needs several steps
+        // 1 Remove existing memories not to have duplicates
+        // 2 Pull out a list of all the files that are stored in our apps directory folder
+        // 3 Loop over ecery file that was found and if it was a thumbnail add it to our memories array
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         let documentsDirectory = paths[0]
         return documentsDirectory
@@ -180,6 +205,7 @@ class MainCollectionView: UICollectionViewController, UICollectionViewDelegateFl
     func recordMemomory() {
         // Recording in iOS ViewController needs to confrom to AVAudioRecordDelegate
         // Step 1 set the backgroung to red to let the user know that audio is being recorded
+        audioPlayer?.stop()
         collectionView?.backgroundColor = UIColor(red: 0.5, green: 0, blue: 0, alpha: 1)
         
         let recordingSession = AVAudioSession.sharedInstance()
@@ -209,11 +235,87 @@ class MainCollectionView: UICollectionViewController, UICollectionViewDelegateFl
     }
     
     func finishRecording(success: Bool) {
+        // Set the background color back to normal
+        collectionView?.backgroundColor = #colorLiteral(red: 0.4352941176, green: 0.8, blue: 0.831372549, alpha: 1)
         
+        // Stop the recording if it is not already stopped
+        audioRecorder?.stop()
+        
+        if success {
+            do {
+                // if rec successfull we need to create a file URL out of the active memory URL + m4a
+                let memoryAudioURL = activeMemory.appendingPathExtension("m4a")
+                let fm = FileManager.default
+                
+                // if already exist there we need to delete it
+                if fm.fileExists(atPath: memoryAudioURL.path) {
+                    try fm.removeItem(at: memoryAudioURL)
+                }
+                // Move out record file
+                try fm.moveItem(at: recordingURL, to: memoryAudioURL)
+                
+                // start the transiption process
+                transcribeAudio(memory: activeMemory)
+            } catch let error {
+                print("Failed to finish recording: \(error)")
+            }
+        }
     }
     
-    func transcribeAudio() {
+    // MARK: Converting Voice to Text
+    func transcribeAudio(memory: URL) {
+        // get paths to where the audio is and where the transciption should be
+        let audio = audioURL(for: memory)
+        let transcription = transcriptionURL(for: memory)
         
+        // create  anew recognizer and point it at our audio
+        let recognizer = SFSpeechRecognizer()
+        let request = SFSpeechURLRecognitionRequest(url: audio)
+        
+        // start recognition
+        recognizer?.recognitionTask(with: request, resultHandler: { [unowned self] (result, error) in
+            // abort if we did not get any transiction back
+            guard let result = result else {
+                print("There was an error: \(error)")
+                return
+            }
+            // if we got the final transcription back we need to write it to disk
+            if result.isFinal {
+                // pull out the best transcription
+                let text = result.bestTranscription.formattedString
+                
+                // write it to disk
+                do {
+                    try text.write(to: transcription, atomically: true, encoding: String.Encoding.utf8)
+                    self.indexMemory(memory: memory, text: text)
+                } catch {
+                    print("Error has occured while saving the transcription.")
+                }
+            }
+        })
+    }
+    
+    // MARK: stores data in Spotlight for easier searching
+    func indexMemory(memory: URL, text: String) {
+        // Create an instance of CSSearchableItemAttributeSet containing the attributes
+        let attributeSet = CSSearchableItemAttributeSet(itemContentType: kUTTypeText as String)
+        attributeSet.title = "Happe Mems"
+        attributeSet.contentDescription = text
+        
+        // Wrap it in a serachable item using the memory's full path as its uniew identifier
+        let item = CSSearchableItem(uniqueIdentifier: memory.path, domainIdentifier: "com.aligorithm", attributeSet: attributeSet)
+        
+        // No expiration
+        item.expirationDate = Date.distantFuture
+        
+        // ask Sporlight to index the item
+        CSSearchableIndex.default().indexSearchableItems([item]) { (error) in
+            if let error = error {
+                print("Index error: \(error)")
+            } else {
+                print("Search item successfully indexed")
+            }
+        }
     }
     
     func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
