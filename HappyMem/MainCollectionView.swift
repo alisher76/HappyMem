@@ -301,6 +301,7 @@ class MainCollectionView: UICollectionViewController, UICollectionViewDelegateFl
         let attributeSet = CSSearchableItemAttributeSet(itemContentType: kUTTypeText as String)
         attributeSet.title = "Happe Mems"
         attributeSet.contentDescription = text
+        attributeSet.thumbnailURL = thumbnailURL(for: memory)
         
         // Wrap it in a serachable item using the memory's full path as its uniew identifier
         let item = CSSearchableItem(uniqueIdentifier: memory.path, domainIdentifier: "com.aligorithm", attributeSet: attributeSet)
